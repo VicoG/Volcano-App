@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html ng-app='myApp'>
+<head>
+	<title>Rent-A-Volcano</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="./partials/style.css">
+
+	<script>
+
+    var myAppModule = angular.module('myApp',['ngRoute']);
+    			var rentVolcanos = [];
+
+
+		myAppModule.config(function($routeProvider, $locationProvider) {
+			$routeProvider
+				.when('/',{
+					templateUrl: './partials/home.html'
+			})
+				.when('/volcanoList',{
+					templateUrl: './partials/volcanoList.html'
+			})
+				.when('/rentVolcano',{
+					templateUrl: './partials/rentVolcano.html'
+			})
+				.otherwise({
+					redirectTo: '/'
+			});
+		});
+
+		myAppModule.controller("volcanoController", function ($scope,$location, volcanoFactory){
+			volcanoFactory.getVolcanos(function (data) {
+				$scope.volcanos = data;
+				console.log('getvolcano');
+			});
+			// // $scope.addStudent = function (){
+			// // 	volcanoFactory.addvolcano($scope.newVolcano, function (data){
+			// // 		volcanoFactory.getVolcanos(function (data){
+			// // 		$scope.volcanos = data;
+			// // 		})
+			// // 		$scope.newVolcano = {};
+			// // 	});
+			// // };
+			$scope.showDetails = function(index){
+				console.log('id');
+				rentVolcanos = $scope.volcanos.splice($scope.volcanos.indexOf(index), 1);
+
+				$location.path('/rentVolcano');
+			}
+
+			$scope.go = function (path) {
+				$location.path(path);
+				};
+		});
+
+		myAppModule.controller("rentVolcanoController", function ($scope,$location, volcanoFactory){
+				$scope.volcanos = rentVolcanos;
+				$scope.modalShown = false;
+				$scope.toggleModal = function() {
+					$scope.modalShown = !$scope.modalShown;
+				};
+			
+		});
+
+		myAppModule.factory('volcanoFactory', function($http){
+			var factory = {};
+			var volcanos = [];
+			var rentVolcanos = [];
+
+			factory.getVolcanos = function (callback){
+				console.log('factory getVolcanos')
+			  $http.get('/data').success(function (output) {
+			  	console.log('get');
+			    volcanos = output;
+			    console.log(volcanos);
+			    callback(volcanos);
+			  }) 		
+		  	}
+	
+			// factory.addvolcano = function(info, callback){
+			// 	console.log('add', info);
+			// 	$http.post('/add', info).success(function (output){
+			// 	callback(output);
+			// 	})
+			// }
+
+			return factory;
+		});
+		myAppModule.directive('modalDialog', function() {
+			return {
+			restrict: 'E',
+			scope: {
+			  show: '='
+			},
+			replace: true, // Replace with the template below
+			transclude: true, // we want to insert custom content inside the directive
+			link: function(scope, element, attrs) {
+			  scope.dialogStyle = {};
+			  if (attrs.width)
+			    scope.dialogStyle.width = attrs.width;
+			  if (attrs.height)
+			    scope.dialogStyle.height = attrs.height;
+			  scope.hideModal = function() {
+			    scope.show = false;
+			  };
+			  
+			},
+			template: "<div class='ng-modal' ng-show='show'><div class='ng-modal-overlay' ng-click='hideModal()'></div><div class='ng-modal-dialog' ng-style='dialogStyle'><div class='ng-modal-close' ng-click='hideModal()'>X</div><div class='ng-modal-dialog-content' ng-transclude></div></div></div>"
+			};
+		});
+
+	</script>
+
+</head>
+<body>
+
+	<div id = 'header'>
+        <a href="#/">Home</a> | <a href="#/volcanoList">Volcano Selection</a>  |  <a href="#/rentVolcano">Rent a Volcano</a>
+    </div>
+
+
+ <div ng-view = ""></div>
+
+
+</body>
+</html>
+
